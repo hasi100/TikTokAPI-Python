@@ -1,6 +1,9 @@
 import re
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+MAX_EMAIL_LEN = 254
+MIN_PASSWORD_LEN = 8
+MAX_PASSWORD_LEN = 1024
 
 
 class LoginError(ValueError):
@@ -8,18 +11,26 @@ class LoginError(ValueError):
 
 
 def validate_email(email):
-    if not isinstance(email, str) or not EMAIL_RE.match(email):
+    if not isinstance(email, str):
+        raise LoginError("email must be a string")
+    email = email.strip().lower()
+    if len(email) > MAX_EMAIL_LEN or not EMAIL_RE.match(email):
         raise LoginError("invalid email")
     return email
 
 
 def validate_password(password):
-    if not isinstance(password, str) or len(password) < 8:
-        raise LoginError("password must be at least 8 characters")
+    if not isinstance(password, str):
+        raise LoginError("password must be a string")
+    if not (MIN_PASSWORD_LEN <= len(password) <= MAX_PASSWORD_LEN):
+        raise LoginError(
+            f"password must be {MIN_PASSWORD_LEN}-{MAX_PASSWORD_LEN} characters"
+        )
     return password
 
 
-def login(email, password):
-    validate_email(email)
-    validate_password(password)
-    return {"email": email, "authenticated": True}
+def validate_credentials(email, password):
+    return {
+        "email": validate_email(email),
+        "password": validate_password(password),
+    }
